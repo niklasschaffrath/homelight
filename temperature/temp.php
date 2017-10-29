@@ -69,6 +69,11 @@ Unknown command
 <html>
 <head>
 <!-- common scripts etc-->
+<meta name="viewport" content="user-scalable=no, width=device-width, minimum-scale=1.0 initial-scale=1.0">
+<link rel="apple-touch-icon" sizes="114x114" href="HSIcon_temp@114px.png" />
+<link rel="apple-touch-icon" sizes="144x144" href="HSIcon_temp@144px.png" />
+<link rel="shortcut icon" href="HSIcon_temp@32px.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <link rel="stylesheet" href="w3.css">
 
@@ -85,9 +90,13 @@ canvas{
 
 .log {
     height: 500px;
-    max-width: 80%;
     overflow: scroll;
 }
+
+.header {
+    height: 5em;
+}
+
 </style>
 
 <script>
@@ -131,18 +140,20 @@ $(document).ready(function(){
 
 </head>
 <body>
-    <h1>Temperature Recording Management Console</h1>
-    <div class="w3-bar w3-grey">
-    <input type="button" id="backtodata" class="w3-button w3-green"  value="Back to Data"/>
-    <input type="button" id="createdatabase" class="w3-button w3-green"  value="Create Database"/>
-    <input type="button" id="dumpraw" class="w3-button w3-green"  value="Dump Database"/>
-    <input type="button" id="data" class="w3-button w3-green"  value="Show data"/>
+    <div class="w3-container" style="max-width:1000px;">    
+    <h1 class="w3-green">Temperature Recording Management Console</h1>
+    <div class="w3-bar w3-green">
+    <input type="button" id="backtodata" class="w3-bar-item w3-button w3-green"  value="Back to Data"/>
+    
+    <input type="button" id="dumpraw" class="w3-bar-item w3-button"  value="Dump Database"/>
+    <input type="button" id="data" class="w3-bar-item w3-button"  value="Show data"/>
+    <input type="button" id="createdatabase" class="w3-bar-item w3-button w3-red"  value="Create Database"/>
     </div>
 
     <div id="log" class="log w3-grey w3-container">
         Ready.
     </div>
-
+    </div>
 </body>
 
 <!-- Normal Interface ###############################################   -->
@@ -154,6 +165,7 @@ $(document).ready(function(){
     <title>Temperature Chart</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="utils.js"></script>
     <style>
     canvas{
@@ -161,19 +173,24 @@ $(document).ready(function(){
         -webkit-user-select: none;
         -ms-user-select: none;
     }
+    .header {
+        height: 5em;
+    }
     </style>
 </head>
 
 <body>
-    <div style="width:75%;">
+     <div class="w3-container" style="max-width:1000px;">
+      <div class="w3-bar w3-amber">
+        <h1 class= "w3-cell w3-bar-item">Temperature History</h1>                
+        <a href="javascript:void(0);" id= "admin"  class="w3-bar-item w3-button w3-right material-icons">settings</a>
+        <a href="javascript:void(0);" id= "update" class="w3-bar-item w3-button w3-right material-icons">replay</a>
+      </div>
+    
+    <div class="w3-row w3-margin-top">
         <canvas id="canvas"></canvas>
     </div>
-    <br>
-    <br>
-    <input type="button" class="w3-button" id="update" value="Update" />
-    <input type="button" class="w3-button" id="addDataset" value="Add Dataset" />
-    <input type="button" class="w3-button" id="admin" value = "Admin"/>
-
+    </div>
     <script>
 
         var timeFormat = 'MM/DD/YYYY HH:mm';
@@ -192,46 +209,37 @@ $(document).ready(function(){
         var config = {
             type: 'line',
             data: {
-
-                datasets: [{
-                    label: "temperatur",
-                    backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
-                    borderColor: window.chartColors.red,
-                    fill: false,
-                    cubicInterpolationMode: 'monotone',
-                    data: [],
-                }]
+                datasets: []
             },
-
             options: {
-                title:{
-                    text: "Chart.js Time Scale"
+                legend: {
+                    display: false
                 },
+            
                 scales: {
                     xAxes: [{
                         type: "time",
                         time: {
                             unit: 'hour',                            
-                            // // round: 'day'
-                            tooltipFormat: 'll HH:mm'
-                        },
-                        scaleLabel: {
-                            display: false,
-                        }
-                    }, ],
-                    yAxes: [{
-                            type: "linear",
-                            ticks: {
-                            min: 15,
-                            max: 25
+                                // // round: 'day'
+                                tooltipFormat: 'll HH:mm'
                             },
                             scaleLabel: {
-
+                                display: false,
+                            }
+                    }, ],
+                    yAxes: [{
+                        type: "linear",
+                        ticks: {
+                            min: 15,
+                            max: 25
+                        },
+                        scaleLabel: {
                             display: true,
                             labelString: '°C'
                         }
                     }]
-                },
+                }
             }
         };
 
@@ -249,13 +257,9 @@ $(document).ready(function(){
             window.myLine.update();
         });
 
-        var colorNames = Object.keys(window.chartColors);
 
         function update() {
             $.post('temp.php', {'cmd': 'data'}, function(rawdata, status) {
-                var colorName = colorNames[0];
-                var newColor = window.chartColors[colorName];
-
                 var data2 = JSON.parse(rawdata);
 
                 var data = data2.map(function(x) {
@@ -264,10 +268,11 @@ $(document).ready(function(){
 
 
                 var newDataset = {                    
-                    backgroundColor: newColor,
-                    borderColor: newColor,
                     data: data,
-                    fill: false
+                    backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
+                    borderColor: window.chartColors.red,
+                    fill: false,
+                    cubicInterpolationMode: 'monotone',
                 };
 
                 config.data.datasets[0]= newDataset;
