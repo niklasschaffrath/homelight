@@ -77,8 +77,9 @@ Unknown command
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <link rel="stylesheet" href="w3.css">
 
-<!-- Admin Interface -->
+
 <?php if ($_GET["cmd"] == "admin"): ?>
+<!-- Admin Interface -->
 <title>Console Temperature Chart</title>
 <style>
 
@@ -141,7 +142,7 @@ $(document).ready(function(){
 </head>
 <body>
     <div class="w3-container" style="max-width:1000px;">    
-    <h1 class="w3-green">Temperature Recording Management Console</h1>
+    <h1 class="w3-green">TRMC</h1>
     <div class="w3-bar w3-green">
     <input type="button" id="backtodata" class="w3-bar-item w3-button w3-green"  value="Back to Data"/>
     
@@ -156,17 +157,15 @@ $(document).ready(function(){
     </div>
 </body>
 
-<!-- Normal Interface ###############################################   -->
-<?php else: ?>
-<!doctype html>
-<html>
 
-<head>
+<?php else: ?>
+<!-- Normal Interface ###############################################   -->    
     <title>Temperature Chart</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script src="utils.js"></script>
+    <script src="jquery-fullscreen.js"></script>
     <style>
     canvas{
         -moz-user-select: none;
@@ -180,11 +179,15 @@ $(document).ready(function(){
 </head>
 
 <body>
-     <div class="w3-container" style="max-width:1000px;">
+     <div id="container" class="w3-container" style="max-width:1000px;">        
+        <h1 class= "w3-amber">Temperature</h1>                
+        <div class="w3-jumbo w3-center w3-bar " > <span id="current">--</span>°C</div>
+
       <div class="w3-bar w3-amber">
-        <h1 class= "w3-cell w3-bar-item">Temperature History</h1>                
+        <h1 class= "w3-cell w3-bar-item">History</h1>                
         <a href="javascript:void(0);" id= "admin"  class="w3-bar-item w3-button w3-right material-icons">settings</a>
         <a href="javascript:void(0);" id= "update" class="w3-bar-item w3-button w3-right material-icons">replay</a>
+        <a href="javascript:void(0);" id= "fullscreen" class="w3-bar-item w3-button w3-right material-icons">fullscreen</a>
       </div>
     
     <div class="w3-row w3-margin-top">
@@ -192,48 +195,26 @@ $(document).ready(function(){
     </div>
     </div>
     <script>
-
         var timeFormat = 'MM/DD/YYYY HH:mm';
-        function newDateString(days) {
-            return moment().add(days, 'd').format(timeFormat);
-        }
 
-        function newTimestamp(days) {
-            return moment().add(days, 'd').unix();
-        }
-
-        function newDate(days) {
-            return moment().add(days, 'd').toDate();
-        }
-        var color = Chart.helpers.color;
         var config = {
             type: 'line',
-            data: {
-                datasets: []
-            },
+            data: { datasets: [] },
             options: {
-                legend: {
-                    display: false
-                },
-            
+                legend: { display: false },
                 scales: {
                     xAxes: [{
                         type: "time",
                         time: {
                             unit: 'hour',                            
-                                // // round: 'day'
-                                tooltipFormat: 'll HH:mm'
+                             // // round: 'day'
+                            tooltipFormat: 'll HH:mm'
                             },
-                            scaleLabel: {
-                                display: false,
-                            }
+                        scaleLabel: { display: false }
                     }, ],
                     yAxes: [{
                         type: "linear",
-                        ticks: {
-                            min: 15,
-                            max: 25
-                        },
+                        ticks: { min: 15, max: 25 },
                         scaleLabel: {
                             display: true,
                             labelString: '°C'
@@ -243,20 +224,21 @@ $(document).ready(function(){
             }
         };
 
-        window.onload = function() {
+        $( document ).ready(function() {
             var ctx = document.getElementById("canvas").getContext("2d");
             window.myLine = new Chart(ctx, config);
             update();
             setInterval(update, 120000);
-        };
 
-
-        document.getElementById('admin').addEventListener('click', function() {
-            window.open("temp.php?cmd=admin","_self");
-
-            window.myLine.update();
         });
 
+        $("#admin").click(function() {
+            window.open("temp.php?cmd=admin","_self");
+        });
+
+        $("#fullscreen").click(function() {
+            $("#container").fullscreen().request();
+        });
 
         function update() {
             $.post('temp.php', {'cmd': 'data'}, function(rawdata, status) {
@@ -266,11 +248,13 @@ $(document).ready(function(){
                     return {t: moment(x['t']), y: x['x']};
                 });
 
+                var cnow = data[data.length - 1].y;
+                $('#current').html(cnow.toFixed(1).toString());
 
                 var newDataset = {                    
                     data: data,
-                    backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
-                    borderColor: window.chartColors.red,
+                    backgroundColor: '#ff8080',
+                    borderColor: '#ff8080',
                     fill: false,
                     cubicInterpolationMode: 'monotone',
                 };
@@ -280,7 +264,7 @@ $(document).ready(function(){
             });
         };
 
-        document.getElementById('update').addEventListener('click', update);
+        $('#update').click( update );
     </script>
    </body> 
 <?php endif; ?>
