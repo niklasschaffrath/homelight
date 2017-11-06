@@ -82,13 +82,6 @@ Unknown command
 <!-- Admin Interface -->
 <title>Console Temperature Chart</title>
 <style>
-
-canvas{
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-}
-
 .log {
     height: 500px;
     overflow: scroll;
@@ -97,6 +90,7 @@ canvas{
 .header {
     height: 5em;
 }
+
 
 </style>
 
@@ -172,26 +166,33 @@ $(document).ready(function(){
         -webkit-user-select: none;
         -ms-user-select: none;
     }
-    .header {
-        height: 5em;
+
+    .fullfire7 {
+        height: 100%;
+        width: 100%;
     }
+
+    .current {
+        position: absolute;
+        top: 20%;
+        right: 40%;
+    }
+
+
     </style>
 </head>
 
 <body>
-     <div id="container" class="w3-container" style="max-width:1000px;">        
-        <h1 class= "w3-amber">Temperature</h1>                
-        <div class="w3-jumbo w3-center w3-bar " > <span id="current">--</span>°C</div>
-
+     <div id="container" class="w3-container">                   
       <div class="w3-bar w3-amber">
-        <h1 class= "w3-cell w3-bar-item">History</h1>                
+        <div class= "w3-xlarge w3-cell w3-bar-item">Temperature</div>
+                       
         <a href="javascript:void(0);" id= "admin"  class="w3-bar-item w3-button w3-right material-icons">settings</a>
         <a href="javascript:void(0);" id= "update" class="w3-bar-item w3-button w3-right material-icons">replay</a>
         <a href="javascript:void(0);" id= "fullscreen" class="w3-bar-item w3-button w3-right material-icons">fullscreen</a>
       </div>
-    
-    <div class="w3-row w3-margin-top">
-        <canvas id="canvas"></canvas>
+      <div class="current w3-jumbo w3-center w3-bar-item" > <span id="current">--</span>°C</div> 
+    <div class="w3-row w3-margin-top" id="graph">
     </div>
     </div>
     <script>
@@ -225,18 +226,27 @@ $(document).ready(function(){
         };
 
         $( document ).ready(function() {
-            var ctx = document.getElementById("canvas").getContext("2d");
-            window.myLine = new Chart(ctx, config);
+            create_graph();
             update();
             setInterval(update, 120000);
 
         });
+
+        function create_graph() {
+            $("#graph").html('<canvas id="canvas"> </canvas>');
+            var ctx = document.getElementById("canvas").getContext("2d");
+            window.myLine = new Chart(ctx, config);
+        };
+
 
         $("#admin").click(function() {
             window.open("temp.php?cmd=admin","_self");
         });
 
         $("#fullscreen").click(function() {
+            $("#container").addClass("fullfire7");
+            create_graph();
+            update();
             $("#container").fullscreen().request();
         });
 
